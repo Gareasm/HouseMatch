@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Match - Music Recommendations</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <img src="images/purpleLogo.svg" alt="House Match Logo" class="logo-img">
+                House Match
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="login.html" class="btn-login">Login</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero" id="vanta-hero">
+        <div class="hero-content">
+            <div class="top-track-card">
+                <h2>Today's Top Track</h2>
+                <p>Track Name: Placeholder</p>
+                <p>Artist: Placeholder</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <h2>Placeholder Features Section</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">�</div>
+                <h3>Feature One</h3>
+                <p>Placeholder description for feature one</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎧</div>
+                <h3>Feature Two</h3>
+                <p>Placeholder description for feature two</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎶</div>
+                <h3>Feature Three</h3>
+                <p>Placeholder description for feature three</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; No one is reading this lol.</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.halo.min.js"></script>
+    <script>
+        VANTA.HALO({
+            el: "#vanta-hero",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            baseColor: 0x421793,
+            backgroundColor: 0x0a0a0a,
+            amplitudeFactor: 0.30,
+            xOffset: 0.15,
+            size: 1.60
+        })
+    </script>
+</body>
+</html>
