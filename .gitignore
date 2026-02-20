@@ -1,0 +1,13 @@
+# Ignore everything by default
+*
+
+# But include HTML and CSS files
+!*.html
+!*.css
+
+# Include images folder and its contents
+!images/
+!images/**
+
+# Include .gitignore itself
+!.gitignore
