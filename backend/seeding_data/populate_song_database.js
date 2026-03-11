@@ -15,4 +15,4 @@ const seedDatabase = async () => {
     }
 };
 
-module.exports = populate_song_database;
+module.exports = seedDatabase;

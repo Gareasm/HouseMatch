@@ -5,7 +5,7 @@ const generateUsers = (numUsers) => {
     const users = [];
 
     users.push({
-        username: "superadmi",
+        username: "superadmin",
         email: "superadmin@housematch.com",
         password: "password",
         role: "admin",
@@ -15,7 +15,7 @@ const generateUsers = (numUsers) => {
         //Assign Roles
         const assigned_role = Math.random() < 0.1 ? 'admin' : 'member';
         users.push({
-            username: faker.internet.userName(),
+            username: faker.internet.username(),
             email: faker.internet.email().toLowerCase(),
             password: "password",
             role: assigned_role,
@@ -27,6 +27,6 @@ const generateUsers = (numUsers) => {
 
 const numUsersToGenerate = 50;
 
-fs.writeFileSync('./users_data.json', JSON.stringify(generateUsers(numUsersToGenerate), null, 2));
+fs.writeFileSync('./seeding_data/users_data.json', JSON.stringify(generateUsers(numUsersToGenerate), null, 2));
 
 console.log(`Generated users and saved to users.json`);

@@ -9,11 +9,11 @@ const seedDatabase = async () => {
         console.log('Existing users cleared');
 
         //Hash Paswords Securely Before Inserting
-        const users_with_hashed_passwords = await Promise.all(userData.map(async (user) => {
+        const users_with_hashed_passwords = await Promise.all(User_Data.map(async (user) => {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(user.password, salt);
             return { 
-                username: user.useername,
+                username: user.username,
                 email: user.email,
                 role: user.role,
                 password: hashedPassword
@@ -28,4 +28,4 @@ const seedDatabase = async () => {
     }
 };
 
-module.exports = populate_user_database;
+module.exports = seedDatabase;
