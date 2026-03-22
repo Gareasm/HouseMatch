@@ -1,23 +1,34 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import './App.css';
-import Login from './pages/Login';
-import Feed from './pages/Feed';
-import AuthGuard from './components/AuthGuard';
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import "./App.css";
+import Login from "./pages/Login";
+import Feed from "./pages/Feed";
+import SongDetail from "./pages/SongDetail";
+import AuthGuard from "./components/AuthGuard";
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="App">
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/feed" element={
+      <Routes>
+        <Route path="/" element={<Navigate to="/feed" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/feed"
+          element={
             <AuthGuard>
               <Feed />
             </AuthGuard>
-          } />
-        </Routes>
-      </div>
+          }
+        />
+        <Route
+          path="/songs/:id"
+          element={
+            <AuthGuard>
+              <SongDetail />
+            </AuthGuard>
+          }
+        />
+      </Routes>
     </BrowserRouter>
   );
 }
