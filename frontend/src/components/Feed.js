@@ -120,12 +120,12 @@ function Feed() {
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: '100vh',
-      background: '#f5f5f5',
+      background: '#0a0a0a',
       gap: 24,
       paddingTop: 64,
     }}>
       <Navbar />
-      <h2 style={{ margin: 0, fontFamily: 'sans-serif' }}>Discover</h2>
+      <h2 style={{ margin: 0, fontFamily: 'sans-serif', color: '#e0e0e0' }}>Discover</h2>
 
       {done ? (
         <div style={{ fontFamily: 'sans-serif', textAlign: 'center' }}>
@@ -159,7 +159,7 @@ function Feed() {
         </div>
       )}
 
-      <p style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#999' }}>
+      <p style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#666' }}>
         {songs.length > 0 ? `${Math.min(index + 1, songs.length)} / ${songs.length}` : ''}
       </p>
     </div>

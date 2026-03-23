@@ -25,7 +25,7 @@ function Home() {
         backgroundColor: 0x0a0a0a,
         amplitudeFactor: 0.30,
         xOffset: 0.15,
-        size: 1.60,
+        size: 1.50,
       });
       vantaRef.current = vantaEffect;
     };

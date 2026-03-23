@@ -1,11 +1,11 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 
-function AuthGuard({ children }) {
+function AuthGuard_Bypass({ children }) {
   return children; // bypass auth for frontend dev
 }
 
-function AuthGuard_TEMP({ children }) {
+function AuthGuard({ children }) {
   const token = localStorage.getItem('token');
 
   if (!token) {
