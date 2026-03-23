@@ -140,6 +140,9 @@ function Register() {
         <p className="register-footer">
           Already have an account? <a href="/login">Log in</a>
         </p>
+        <p className="register-footer">
+          <a href="/">Home</a>
+        </p>
       </div>
     </div>
   );
