@@ -123,6 +123,9 @@ function Login() {
         <p className="login-footer">
           Don't have an account? <a href="/register">Sign up</a>
         </p>
+        <p className="login-footer">
+          <a href="/">Home</a>
+        </p>
       </div>
     </div>
   );

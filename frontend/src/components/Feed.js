@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import TrackCard from './TrackCard';
+import Navbar from './Navbar';
 
 const testSongs = [
   { id: 1, title: "Losing It", artist: "FISHER", albumArt: null, spotifyUrl: null, soundcloudUrl: null },
@@ -121,7 +122,9 @@ function Feed() {
       minHeight: '100vh',
       background: '#f5f5f5',
       gap: 24,
+      paddingTop: 64,
     }}>
+      <Navbar />
       <h2 style={{ margin: 0, fontFamily: 'sans-serif' }}>Discover</h2>
 
       {done ? (
