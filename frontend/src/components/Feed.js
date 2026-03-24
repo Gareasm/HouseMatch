@@ -100,15 +100,22 @@ function Feed() {
     fetchSongs();
   }, []);
 
+  //TODO: implement logic for liking song and passing song.
+
+   const handlePass = () => {
+    //do whatever
+    console.log('Passed:', songs[index]?.title);
+    //moves to next song
+    setIndex(i => i + 1);
+  };
+  
   const handleLike = () => {
     console.log('Liked:', songs[index]?.title);
+
     setIndex(i => i + 1);
   };
 
-  const handlePass = () => {
-    console.log('Passed:', songs[index]?.title);
-    setIndex(i => i + 1);
-  };
+ 
 
   const remaining = songs.slice(index, index + 3);
   const done = index >= songs.length && songs.length > 0;

@@ -1,7 +1,15 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Navbar() {
   const isLoggedIn = !!localStorage.getItem('token');
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('role');
+    navigate('/');
+  };
 
   return (
     <nav style={styles.nav}>
@@ -10,7 +18,10 @@ function Navbar() {
       </Link>
       <div style={styles.links}>
         {isLoggedIn ? (
-          <Link to="/feed" style={styles.btn}>Feed</Link>
+          <>
+            <Link to="/feed" style={styles.btn}>Feed</Link>
+            <button onClick={handleLogout} style={styles.btnLogout}>Log Out</button>
+          </>
         ) : (
           <>
             <Link to="/login" style={styles.btn}>Log In</Link>
@@ -53,7 +64,15 @@ const styles = {
     borderRadius: 8,
     border: '1px solid rgba(168, 85, 247, 0.4)',
   },
-  btnPrimary: {
+  btnLogout: {
+    background: 'transparent',
+    color: '#e2d9f3',
+    fontSize: 14,
+    padding: '6px 16px',
+    borderRadius: 8,
+    border: '1px solid rgba(168, 85, 247, 0.4)',
+    cursor: 'pointer',
+  },
     background: '#7c3aed',
     color: '#fff',
     border: '1px solid #7c3aed',
