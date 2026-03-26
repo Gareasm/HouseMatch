@@ -76,7 +76,7 @@ const styles = {
     background: '#7c3aed',
     color: '#fff',
     border: '1px solid #7c3aed',
-  },
-};
+  }
+;
 
 export default Navbar;
