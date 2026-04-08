@@ -19,7 +19,6 @@ function SwipeCard({ song, onLike, onPass, isTop }) {
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
 
-  // Hint overlays
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
   const passOpacity = useTransform(x, [-100, 0], [1, 0]);
 
@@ -41,7 +40,6 @@ function SwipeCard({ song, onLike, onPass, isTop }) {
       }}
       whileTap={{ cursor: 'grabbing' }}
     >
-      {/* Like hint */}
       <motion.div style={{
         position: 'absolute', top: 16, left: 16, zIndex: 10,
         background: '#22c55e', color: '#fff', fontWeight: 700,
@@ -51,7 +49,6 @@ function SwipeCard({ song, onLike, onPass, isTop }) {
         LIKE
       </motion.div>
 
-      {/* Pass hint */}
       <motion.div style={{
         position: 'absolute', top: 16, right: 16, zIndex: 10,
         background: '#ef4444', color: '#fff', fontWeight: 700,
@@ -75,6 +72,7 @@ function SwipeCard({ song, onLike, onPass, isTop }) {
 function Feed() {
   const [songs, setSongs] = useState([]);
   const [index, setIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchSongs = async () => {
@@ -100,25 +98,28 @@ function Feed() {
     fetchSongs();
   }, []);
 
-  //TODO: implement logic for liking song and passing song.
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setIndex(0);
+  };
 
-   const handlePass = () => {
-    //do whatever
-    console.log('Passed:', songs[index]?.title);
-    //moves to next song
+  const handlePass = () => {
+    console.log('Passed:', filteredSongs[index]?.title);
     setIndex(i => i + 1);
   };
-  
+
   const handleLike = () => {
-    console.log('Liked:', songs[index]?.title);
-
+    console.log('Liked:', filteredSongs[index]?.title);
     setIndex(i => i + 1);
   };
 
- 
+  const filteredSongs = songs.filter(song =>
+    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    song.artist.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const remaining = songs.slice(index, index + 3);
-  const done = index >= songs.length && songs.length > 0;
+  const remaining = filteredSongs.slice(index, index + 3);
+  const done = index >= filteredSongs.length && filteredSongs.length > 0;
 
   return (
     <div style={{
@@ -133,6 +134,23 @@ function Feed() {
     }}>
       <Navbar />
       <h2 style={{ margin: 0, fontFamily: 'sans-serif', color: '#e0e0e0' }}>Discover</h2>
+
+      <input
+        type="text"
+        placeholder="Search by title or artist..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+        style={{
+          padding: '8px 16px',
+          borderRadius: 8,
+          border: '1px solid #333',
+          background: '#1a1a1a',
+          color: '#e0e0e0',
+          fontSize: 14,
+          width: 260,
+          outline: 'none',
+        }}
+      />
 
       {done ? (
         <div style={{ fontFamily: 'sans-serif', textAlign: 'center' }}>
@@ -158,7 +176,6 @@ function Feed() {
         </div>
       )}
 
-      {/* Buttons */}
       {!done && (
         <div style={{ display: 'flex', gap: 32 }}>
           <button onClick={handlePass} style={btnStyle()}>Pass</button>
@@ -167,7 +184,7 @@ function Feed() {
       )}
 
       <p style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#666' }}>
-        {songs.length > 0 ? `${Math.min(index + 1, songs.length)} / ${songs.length}` : ''}
+        {filteredSongs.length > 0 ? `${Math.min(index + 1, filteredSongs.length)} / ${filteredSongs.length}` : ''}
       </p>
     </div>
   );

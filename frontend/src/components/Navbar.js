@@ -73,6 +73,7 @@ const styles = {
     border: '1px solid rgba(168, 85, 247, 0.4)',
     cursor: 'pointer',
   },
+      btnPrimary: {
     background: '#7c3aed',
     color: '#fff',
     border: '1px solid #7c3aed',
