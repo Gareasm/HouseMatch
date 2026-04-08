@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Song = require("../models/Song");
 const Vote = require("../models/Vote");
-const { protect } = require("../middleware/authMiddleware");
+const { protect, admin } = require("../middleware/authMiddleware");
 
 //GET /api/songs
 //fetch all songs for the feed
