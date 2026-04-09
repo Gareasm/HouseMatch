@@ -1,15 +1,28 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 function Navbar() {
   const isLoggedIn = !!localStorage.getItem('token');
   const navigate = useNavigate();
+  const [loggedOut, setLoggedOut] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('role');
-    navigate('/');
+    setLoggedOut(true);
+    setTimeout(() => {
+      navigate('/login');
+    }, 1500);
   };
+
+  if (loggedOut) {
+    return (
+      <div style={styles.confirmation}>
+        You have been logged out.
+      </div>
+    );
+  }
 
   return (
     <nav style={styles.nav}>
@@ -73,10 +86,22 @@ const styles = {
     border: '1px solid rgba(168, 85, 247, 0.4)',
     cursor: 'pointer',
   },
-      btnPrimary: {
+  btnPrimary: {
     background: '#7c3aed',
     color: '#fff',
     border: '1px solid #7c3aed',
+  },
+  confirmation: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    padding: '16px',
+    background: '#3b0764',
+    color: '#e2d9f3',
+    textAlign: 'center',
+    fontSize: 14,
+    zIndex: 1000,
   },
 };
 
