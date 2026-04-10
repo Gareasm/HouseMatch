@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import TrackCard from './TrackCard';
 import Navbar from './Navbar';
+import apiFetch from '../api/apiFetch';
 
 const testSongs = [
   { id: 1, title: "Losing It", artist: "FISHER", albumArt: null, spotifyUrl: null, soundcloudUrl: null },
@@ -77,7 +78,8 @@ function Feed() {
   useEffect(() => {
     const fetchSongs = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/songs');
+        const response = await apiFetch('http://localhost:5000/api/songs');
+        if (!response) return;
         const data = await response.json();
         if (response.ok && Array.isArray(data) && data.length > 0) {
           setSongs(data.map((song, i) => ({
