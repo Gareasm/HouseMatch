@@ -116,4 +116,24 @@ router.post("/", protect, async (req, res) => {
   }
 });
 
+// DELETE /api/songs/:id
+// admin only - removes song and all associated votes
+router.delete("/:id", protect, admin, async (req, res) => {
+  try {
+    const song = await Song.findById(req.params.id);
+
+    if (!song) {
+      return res.status(404).json({ message: "Song not found." });
+    }
+
+    await Vote.deleteMany({ song: req.params.id });
+    await Song.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({ message: "Song and associated votes deleted." });
+  } catch (err) {
+    console.error("Error deleting song:", err);
+    res.status(500).json({ message: "Server error while deleting song." });
+  }
+});
+
 module.exports = router;
