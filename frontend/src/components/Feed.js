@@ -105,14 +105,26 @@ function Feed() {
     setIndex(0);
   };
 
-  const handlePass = () => {
-    console.log('Passed:', filteredSongs[index]?.title);
-    setIndex(i => i + 1);
-  };
+  const handleVote = async (voteType) => {
+    try {
+      const song = filteredSongs[index];
+      if (!song) return;
 
-  const handleLike = () => {
-    console.log('Liked:', filteredSongs[index]?.title);
-    setIndex(i => i + 1);
+      const token = localStorage.getItem("token");
+
+      await fetch(`http://localhost:5000/api/songs/${song.id}/vote`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ vote_type: voteType }),
+      });
+
+      setIndex(i => i + 1);
+    } catch (err) {
+      console.error("Vote failed:", err);
+    }
   };
 
   const filteredSongs = songs.filter(song =>
@@ -170,8 +182,8 @@ function Feed() {
                 key={song.id}
                 song={song}
                 isTop={isTop}
-                onLike={handleLike}
-                onPass={handlePass}
+                onLike={() => handleVote("like")}
+                onPass={() => handleVote("dislike")}
               />
             );
           })}
@@ -180,8 +192,8 @@ function Feed() {
 
       {!done && (
         <div style={{ display: 'flex', gap: 32 }}>
-          <button onClick={handlePass} style={btnStyle()}>Pass</button>
-          <button onClick={handleLike} style={btnStyle()}>Like</button>
+          <button onClick={() => handleVote("dislike")}>Pass</button>
+          <button onClick={() => handleVote("like")}>Like</button>
         </div>
       )}
 

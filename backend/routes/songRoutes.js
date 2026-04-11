@@ -136,4 +136,63 @@ router.delete("/:id", protect, admin, async (req, res) => {
   }
 });
 
+// POST /api/songs/:id/vote
+// like or dislike a song
+router.post("/:id/vote", protect, async (req, res) => {
+  try {
+    const { vote_type } = req.body; // must match your existing Vote.js
+    const songId = req.params.id;
+    const userId = req.user.id;
+
+    if (!["like", "dislike"].includes(vote_type)) {
+      return res.status(400).json({
+        message: "vote_type must be either 'like' or 'dislike'.",
+      });
+    }
+
+    const song = await Song.findById(songId);
+    if (!song) {
+      return res.status(404).json({ message: "Song not found." });
+    }
+
+    const existingVote = await Vote.findOne({
+      user: userId,
+      song: songId,
+    });
+
+    if (!existingVote) {
+      await Vote.create({
+        user: userId,
+        song: songId,
+        vote_type,
+      });
+    } else if (existingVote.vote_type === vote_type) {
+      // optional toggle-off behavior
+      await Vote.findByIdAndDelete(existingVote._id);
+    } else {
+      existingVote.vote_type = vote_type;
+      await existingVote.save();
+    }
+
+    const likes = await Vote.countDocuments({
+      song: songId,
+      vote_type: "like",
+    });
+
+    const dislikes = await Vote.countDocuments({
+      song: songId,
+      vote_type: "dislike",
+    });
+
+    const updatedSong = await Song.findByIdAndUpdate(songId,{likes, dislikes, totalVotes: likes + dislikes,},{ new: true });
+
+    res.status(200).json({
+      message: "Vote recorded successfully.",
+      song: updatedSong,
+    });
+  } catch (err) {
+    console.error("Error recording vote:", err);
+    res.status(500).json({ message: "Server error while recording vote." });
+  }
+});
 module.exports = router;
