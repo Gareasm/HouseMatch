@@ -59,7 +59,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST /api/songs
-// add a new song with daily submission limit
+// add a new song with daily submission limit + duplicate SoundCloud check
 router.post("/", protect, async (req, res) => {
   try {
     const { title, artist, soundcloudUrl } = req.body;
@@ -76,6 +76,23 @@ router.post("/", protect, async (req, res) => {
     if (!soundcloudRegex.test(soundcloudUrl)) {
       return res.status(400).json({
         message: "Invalid SoundCloud URL. Try again.",
+      });
+    }
+
+    // normalize URL for duplicate detection
+    let normalizedUrl = soundcloudUrl.trim().toLowerCase();
+    if (normalizedUrl.endsWith("/")) {
+      normalizedUrl = normalizedUrl.slice(0, -1);
+    }
+
+    // duplicate check
+    const existingSong = await Song.findOne({
+      normalizedSoundcloudUrl: normalizedUrl,
+    });
+
+    if (existingSong) {
+      return res.status(409).json({
+        message: "That SoundCloud URL has already been submitted.",
       });
     }
 
@@ -99,6 +116,7 @@ router.post("/", protect, async (req, res) => {
       title,
       artist,
       soundcloudUrl,
+      normalizedSoundcloudUrl: normalizedUrl,
       submittedBy: req.user.id,
       likes: 0,
       dislikes: 0,
@@ -111,6 +129,12 @@ router.post("/", protect, async (req, res) => {
       submissionsRemaining: 4 - submissionsToday,
     });
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({
+        message: "That SoundCloud URL has already been submitted.",
+      });
+    }
+
     console.error("Error adding song:", err);
     res.status(500).json({ message: "Server error while adding song." });
   }
