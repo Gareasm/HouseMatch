@@ -7,6 +7,7 @@ import Register from './components/Register';
 import Feed from "./components/Feed";
 import SongDetail from "./components/SongDetail";
 import AuthGuard from "./components/AuthGuard";
+import Profile from "./components/Profile";
 
 function App() {
   useEffect(() => {
@@ -35,6 +36,7 @@ function App() {
         <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
         <Route
           path="/feed"
           element={
