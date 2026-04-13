@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-// TODO: backend — wire this up to POST /api/songs
+// TODO: backend — wire this up to POST /api/songs idk how to 
 async function submitSong(songData) {
   console.log('submitSong called with:', songData);
+  //this is what claude says tho 
   // const response = await fetch('http://localhost:5000/api/songs', {
   //   method: 'POST',
   //   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
@@ -71,7 +72,9 @@ function Navbar() {
         </div>
       </nav>
 
-      {/* Modal */}
+      {/* Modal
+      */}
+      
       {showForm && (
         <div style={styles.overlay} onClick={() => setShowForm(false)}>
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -98,7 +101,7 @@ function Navbar() {
                   required
                   style={styles.input}
                 />
-                <label style={styles.label}>SoundCloud / Audio URL</label>
+                <label style={styles.label}>SoundCloud URL</label>
                 <input
                   name="url"
                   value={form.url}
@@ -108,8 +111,11 @@ function Navbar() {
                   style={styles.input}
                 />
                 <div style={styles.formActions}>
-                  <button type="button" onClick={() => setShowForm(false)} style={styles.btnCancel}>Cancel</button>
-                  <button type="submit" style={styles.btnSubmit}>Submit</button>
+                  <button type="button" onClick={
+                    () => setShowForm(false)} 
+                    style={styles.btnCancel}>Cancel</button>
+                  <button type="submit" 
+                    style={styles.btnSubmit}>Submit</button>
                 </div>
               </form>
             )}

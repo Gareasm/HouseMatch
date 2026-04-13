@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import './Leaderboard.css';
 
+// Retrive actual songs 
+
 const placeholderSongs = [
+  //auto generated
   { id: 1, title: "Losing It", artist: "FISHER", likes: 142 },
   { id: 2, title: "Rumble", artist: "Skrillex & Fred Again", likes: 118 },
   { id: 3, title: "San Frandisco", artist: "Dom Dolla", likes: 97 },
@@ -22,18 +25,23 @@ function Leaderboard() {
     const fetchLeaderboard = async () => {
       try {
         const res = await fetch('http://localhost:5000/api/songs/leaderboard');
+        //leaderboard call
         const data = await res.json();
         if (res.ok && Array.isArray(data) && data.length > 0) {
           setSongs(data);
-        } else {
+        } 
+        else {
           setSongs(placeholderSongs);
         }
-      } catch {
+      } 
+      catch {
         setSongs(placeholderSongs);
       }
     };
     fetchLeaderboard();
-  }, []);
+  }, 
+  []
+);
 
   return (
     <div className="lb-container">
@@ -44,6 +52,7 @@ function Leaderboard() {
 
         <div className="lb-list">
           {songs.map((song, i) => (
+            //Credit to W3Schools HTML Tutorial 
             <div key={song.id} className={`lb-row ${i < 3 ? 'lb-row--top' : ''}`}>
               <span className="lb-rank">
                 {i < 3 ? medals[i] : `#${i + 1}`}
