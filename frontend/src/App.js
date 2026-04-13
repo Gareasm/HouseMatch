@@ -8,6 +8,7 @@ import Feed from "./components/Feed";
 import SongDetail from "./components/SongDetail";
 import AuthGuard from "./components/AuthGuard";
 import Profile from "./components/Profile";
+import Leaderboard from "./components/Leaderboard";
 
 function App() {
   useEffect(() => {
@@ -37,6 +38,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route
           path="/feed"
           element={
