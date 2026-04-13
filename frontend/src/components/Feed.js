@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import TrackCard from './TrackCard';
 import Navbar from './Navbar';
+import apiFetch from '../api/apiFetch';
 
 const testSongs = [
   { id: 1, title: "Losing It", artist: "FISHER", albumArt: null, spotifyUrl: null, soundcloudUrl: null },
@@ -19,7 +20,6 @@ function SwipeCard({ song, onLike, onPass, isTop }) {
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
 
-  // Hint overlays
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
   const passOpacity = useTransform(x, [-100, 0], [1, 0]);
 
@@ -41,7 +41,6 @@ function SwipeCard({ song, onLike, onPass, isTop }) {
       }}
       whileTap={{ cursor: 'grabbing' }}
     >
-      {/* Like hint */}
       <motion.div style={{
         position: 'absolute', top: 16, left: 16, zIndex: 10,
         background: '#22c55e', color: '#fff', fontWeight: 700,
@@ -51,7 +50,6 @@ function SwipeCard({ song, onLike, onPass, isTop }) {
         LIKE
       </motion.div>
 
-      {/* Pass hint */}
       <motion.div style={{
         position: 'absolute', top: 16, right: 16, zIndex: 10,
         background: '#ef4444', color: '#fff', fontWeight: 700,
@@ -75,11 +73,13 @@ function SwipeCard({ song, onLike, onPass, isTop }) {
 function Feed() {
   const [songs, setSongs] = useState([]);
   const [index, setIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchSongs = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/songs');
+        const response = await apiFetch('http://localhost:5000/api/songs');
+        if (!response) return;
         const data = await response.json();
         if (response.ok && Array.isArray(data) && data.length > 0) {
           setSongs(data.map((song, i) => ({
@@ -100,25 +100,40 @@ function Feed() {
     fetchSongs();
   }, []);
 
-  //TODO: implement logic for liking song and passing song.
-
-   const handlePass = () => {
-    //do whatever
-    console.log('Passed:', songs[index]?.title);
-    //moves to next song
-    setIndex(i => i + 1);
-  };
-  
-  const handleLike = () => {
-    console.log('Liked:', songs[index]?.title);
-
-    setIndex(i => i + 1);
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setIndex(0);
   };
 
- 
+  const handleVote = async (voteType) => {
+    try {
+      const song = filteredSongs[index];
+      if (!song) return;
 
-  const remaining = songs.slice(index, index + 3);
-  const done = index >= songs.length && songs.length > 0;
+      const token = localStorage.getItem("token");
+
+      await fetch(`http://localhost:5000/api/songs/${song.id}/vote`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ vote_type: voteType }),
+      });
+
+      setIndex(i => i + 1);
+    } catch (err) {
+      console.error("Vote failed:", err);
+    }
+  };
+
+  const filteredSongs = songs.filter(song =>
+    song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    song.artist.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const remaining = filteredSongs.slice(index, index + 3);
+  const done = index >= filteredSongs.length && filteredSongs.length > 0;
 
   return (
     <div style={{
@@ -133,6 +148,23 @@ function Feed() {
     }}>
       <Navbar />
       <h2 style={{ margin: 0, fontFamily: 'sans-serif', color: '#e0e0e0' }}>Discover</h2>
+
+      <input
+        type="text"
+        placeholder="Search by title or artist..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+        style={{
+          padding: '8px 16px',
+          borderRadius: 8,
+          border: '1px solid #333',
+          background: '#1a1a1a',
+          color: '#e0e0e0',
+          fontSize: 14,
+          width: 260,
+          outline: 'none',
+        }}
+      />
 
       {done ? (
         <div style={{ fontFamily: 'sans-serif', textAlign: 'center' }}>
@@ -150,24 +182,23 @@ function Feed() {
                 key={song.id}
                 song={song}
                 isTop={isTop}
-                onLike={handleLike}
-                onPass={handlePass}
+                onLike={() => handleVote("like")}
+                onPass={() => handleVote("dislike")}
               />
             );
           })}
         </div>
       )}
 
-      {/* Buttons */}
       {!done && (
         <div style={{ display: 'flex', gap: 32 }}>
-          <button onClick={handlePass} style={btnStyle()}>Pass</button>
-          <button onClick={handleLike} style={btnStyle()}>Like</button>
+          <button onClick={() => handleVote("dislike")}>Pass</button>
+          <button onClick={() => handleVote("like")}>Like</button>
         </div>
       )}
 
       <p style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#666' }}>
-        {songs.length > 0 ? `${Math.min(index + 1, songs.length)} / ${songs.length}` : ''}
+        {filteredSongs.length > 0 ? `${Math.min(index + 1, filteredSongs.length)} / ${filteredSongs.length}` : ''}
       </p>
     </div>
   );
