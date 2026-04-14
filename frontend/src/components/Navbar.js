@@ -17,6 +17,7 @@ const emptyForm = { title: '', artist: '', url: '' };
 
 function Navbar() {
   const isLoggedIn = !!localStorage.getItem('token');
+  const isAdmin = localStorage.getItem('role') === 'admin';
   const navigate = useNavigate();
   const [loggedOut, setLoggedOut] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -60,6 +61,7 @@ function Navbar() {
               <Link to="/feed" style={styles.btn}>Feed</Link>
               <Link to="/leaderboard" style={styles.btn}>Leaderboard</Link>
               <Link to="/profile" style={styles.btn}>Profile</Link>
+              {isAdmin && <Link to="/admin" style={styles.btnAdmin}>Admin</Link>}
               <button onClick={() => setShowForm(true)} style={styles.btnAdd}>+ Add Song</button>
               <button onClick={handleLogout} style={styles.btnLogout}>Log Out</button>
             </>
@@ -159,8 +161,16 @@ const styles = {
     border: '1px solid rgba(168, 85, 247, 0.4)',
     cursor: 'pointer',
   },
-  btnAdd: {
-    background: '#7c3aed',
+  btnAdmin: {
+    textDecoration: 'none',
+    color: '#a855f7',
+    fontSize: 14,
+    padding: '6px 16px',
+    borderRadius: 8,
+    border: '1px solid #a855f7',
+    fontWeight: 600,
+  },
+  btnAdd: {    background: '#7c3aed',
     color: '#fff',
     fontSize: 14,
     padding: '6px 16px',

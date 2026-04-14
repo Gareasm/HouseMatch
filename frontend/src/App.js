@@ -9,23 +9,27 @@ import SongDetail from "./components/SongDetail";
 import AuthGuard from "./components/AuthGuard";
 import Profile from "./components/Profile";
 import Leaderboard from "./components/Leaderboard";
+import AdminDashboard from "./components/AdminDashboard";
+import AdminGuard from "./components/AdminGuard";
 
 function App() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const isExpired = payload.exp * 1000 < Date.now();
-        if (isExpired) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('username');
-          localStorage.removeItem('role');
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          const isExpired = payload.exp * 1000 < Date.now();
+          if (isExpired) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('role');
+          }
         }
+        // non-JWT tokens (e.g. dev-bypass) are left alone
       } catch {
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
-        localStorage.removeItem('role');
+        // malformed JWT — leave it, don't wipe dev tokens
       }
     }
   }, []);
@@ -39,6 +43,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
         <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
         <Route
           path="/feed"
           element={
