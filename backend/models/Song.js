@@ -14,7 +14,7 @@ const songSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-songSchema.pre("validate", function (next) {
+songSchema.pre("validate", function () {
   if (this.soundcloudUrl) {
     let url = this.soundcloudUrl.trim().toLowerCase();
 
@@ -25,7 +25,6 @@ songSchema.pre("validate", function (next) {
 
     this.normalizedSoundcloudUrl = url;
   }
-  next();
 });
 
 module.exports = mongoose.model("Song", songSchema);
