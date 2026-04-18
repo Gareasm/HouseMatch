@@ -39,6 +39,17 @@ router.get("/recommendations", protect, async (req, res) => {
   }
 });
 
+// GET /api/songs/leaderboard
+router.get("/leaderboard", async (req, res) => {
+  try {
+    const songs = await Song.find().sort({ likes: -1, totalVotes: -1, createdAt: -1 });
+    res.status(200).json(songs);
+  } catch (err) {
+    console.error("Error fetching leaderboard:", err);
+    res.status(500).json({ message: "Server error fetching leaderboard." });
+  }
+});
+
 //GET /api/songs/:id
 //fetch one song by ID
 router.get("/:id", async (req, res) => {

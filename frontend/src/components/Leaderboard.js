@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Navbar from './Navbar';
 import './Leaderboard.css';
 
 // Retrive actual songs 
+
+const PAGE_SIZE = 20;
 
 const placeholderSongs = [
   //auto generated
@@ -20,6 +22,7 @@ const medals = ['#1', '#2', '#3'];
 
 function Leaderboard() {
   const [songs, setSongs] = useState([]);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -40,8 +43,21 @@ function Leaderboard() {
     };
     fetchLeaderboard();
   }, 
-  []
-);
+  []);
+  const totalPages = Math.max(1, Math.ceil(songs.length / PAGE_SIZE));
+
+  const currentSongs = useMemo(() => {
+    const startIndex = (page - 1) * PAGE_SIZE;
+    return songs.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [songs, page]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const startIndex = (page - 1) * PAGE_SIZE;
 
   return (
     <div className="lb-container">
@@ -51,19 +67,64 @@ function Leaderboard() {
         <p className="lb-subtitle">Top tracks ranked by likes</p>
 
         <div className="lb-list">
-          {songs.map((song, i) => (
+          {currentSongs.map((song, i) => (
             //Credit to W3Schools HTML Tutorial 
-            <div key={song.id} className={`lb-row ${i < 3 ? 'lb-row--top' : ''}`}>
+            <div key={song._id || song.id} className={`lb-row ${startIndex + i < 3 ? 'lb-row--top' : ''}`}>
               <span className="lb-rank">
-                {i < 3 ? medals[i] : `#${i + 1}`}
+                {startIndex + i < 3 ? medals[startIndex + i] : `#${startIndex + i + 1}`}
               </span>
               <div className="lb-track">
                 <span className="lb-track-title">{song.title}</span>
                 <span className="lb-track-artist">{song.artist}</span>
               </div>
-              <span className="lb-likes">{song.likes} likes</span>
+              <span className="lb-likes">{song.likes ?? 0} likes</span>
             </div>
           ))}
+          {songs.length > PAGE_SIZE && (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '12px',
+                marginTop: '24px',
+              }}
+            >
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #a855f7',
+                  background: page === 1 ? '#2a2a2a' : '#7c3aed',
+                  color: '#fff',
+                  cursor: page === 1 ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Previous
+              </button>
+
+              <span style={{ color: '#e2d9f3', fontWeight: 600 }}>
+                Page {page} of {totalPages}
+              </span>
+
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #a855f7',
+                  background: page === totalPages ? '#2a2a2a' : '#7c3aed',
+                  color: '#fff',
+                  cursor: page === totalPages ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
