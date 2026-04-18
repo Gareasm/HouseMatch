@@ -3,14 +3,24 @@ import { Link, useNavigate } from 'react-router-dom';
 
 // TODO: backend — wire this up to POST /api/songs idk how to 
 async function submitSong(songData) {
-  console.log('submitSong called with:', songData);
-  //this is what claude says tho 
-  // const response = await fetch('http://localhost:5000/api/songs', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
-  //   body: JSON.stringify(songData),
-  // });
-  // return response.json();
+  const token = localStorage.getItem('token');
+
+	const response = await fetch('http://localhost:5000/api/songs', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${token}`,
+		},
+		body: JSON.stringify(songData),
+	});
+
+	const data = await response.json();
+
+	if (!response.ok) {
+		throw new Error(data.message || 'Failed to submit song');
+	}
+
+	return data;
 }
 
 const emptyForm = { title: '', artist: '', url: '' };
