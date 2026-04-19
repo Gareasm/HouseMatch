@@ -75,30 +75,35 @@ function Feed() {
   const [index, setIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    const fetchSongs = async () => {
-      try {
-        const response = await apiFetch('http://localhost:5000/api/songs');
-        if (!response) return;
-        const data = await response.json();
-        if (response.ok && Array.isArray(data) && data.length > 0) {
-          setSongs(data.map((song, i) => ({
-            id: song._id || i,
-            title: song.title,
-            artist: song.artist || '',
-            albumArt: song.artworkUrl || null,
-            previewUrl: song.previewUrl || null,
-            streamAccess: song.streamAccess || null,
-            soundcloudUrl: song.permalinkUrl || song.soundcloudUrl || null,
-          })));
-        } else {
-          setSongs(testSongs);
-        }
-      } catch {
+  // Fetch personalized recommendations based on user's votes
+  const fetchRecommendations = async () => {
+    try {
+      const response = await apiFetch('http://localhost:5000/api/songs/recommendations');
+      if (!response) return;
+      const data = await response.json();
+      if (response.ok && Array.isArray(data) && data.length > 0) {
+        setSongs(data.map((song, i) => ({
+          id: song._id || i,
+          title: song.title,
+          artist: song.artist || '',
+          albumArt: song.artworkUrl || null,
+          previewUrl: song.previewUrl || null,
+          streamAccess: song.streamAccess || null,
+          soundcloudUrl: song.permalinkUrl || song.soundcloudUrl || null,
+          recommendationScore: song.recommendationScore || 0,
+        })));
+        setIndex(0); // Reset to show fresh recommendations from top
+      } else {
         setSongs(testSongs);
       }
-    };
-    fetchSongs();
+    } catch {
+      setSongs(testSongs);
+    }
+  };
+
+  // Load recommendations on component mount
+  useEffect(() => {
+    fetchRecommendations();
   }, []);
 
   const handleSearchChange = (e) => {
@@ -113,6 +118,7 @@ function Feed() {
 
       const token = localStorage.getItem("token");
 
+      // Record the vote
       await fetch(`http://localhost:5000/api/songs/${song.id}/vote`, {
         method: "POST",
         headers: {
@@ -122,7 +128,8 @@ function Feed() {
         body: JSON.stringify({ vote_type: voteType }),
       });
 
-      setIndex(i => i + 1);
+      // Refresh recommendations based on updated preferences
+      await fetchRecommendations();
     } catch (err) {
       console.error("Vote failed:", err);
     }

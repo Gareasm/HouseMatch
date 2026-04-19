@@ -96,6 +96,7 @@ async function resolveTrack(url) {
 		permalinkUrl: track.permalink_url || cleanUrl,
 		previewUrl,
 		streamAccess: track.access || null,
+		genre: track.genre || null,
 	};
 }
 

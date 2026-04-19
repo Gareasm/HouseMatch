@@ -18,19 +18,85 @@ router.get("/", async (req, res) => {
 });
 
 //GET /api/songs/recommendations
+// Returns songs recommended based on user's liked songs (content-based filtering)
+// Scoring: Artist match (+50), Genre match (+30), BPM match (+20)
 router.get("/recommendations", protect, async (req, res) => {
   try {
-    const userVotes = await Vote.find({ user: req.user.id });
-    const seenSongIds = userVotes.map((vote) => vote.song);
+    const userId = req.user.id;
+    
+    // Get all songs user has voted on
+    const userVotes = await Vote.find({ user: userId }).populate('song');
+    const seenSongIds = userVotes.map((vote) => vote.song._id);
 
-    const recommendations = (
-      await Song.find({ _id: { $nin: seenSongIds } })
-    ).sort({ likes: -1 });
+    // Get liked songs only
+    const likedVotes = userVotes.filter(vote => vote.vote_type === 'like');
+    
+    // If user is new (no likes), return top songs by votes
+    if (likedVotes.length === 0) {
+      const topSongs = await Song.find({ _id: { $nin: seenSongIds } })
+        .sort({ likes: -1, totalVotes: -1 })
+        .limit(50);
+      
+      if (topSongs.length === 0) {
+        return res.status(200).json({ 
+          message: "No more songs to rank, come back later!" 
+        });
+      }
+
+      return res.status(200).json(topSongs);
+    }
+
+    // Extract user preferences from liked songs
+    const likedSongs = likedVotes.map(v => v.song);
+    const preferredArtists = [...new Set(likedSongs.map(s => s.artist).filter(a => a))];
+    const preferredGenres = [...new Set(likedSongs.map(s => s.genre).filter(g => g))];
+    
+    // Calculate average BPM from liked songs with BPM data
+    const songsWithBpm = likedSongs.filter(s => s.bpm !== null);
+    const avgBpm = songsWithBpm.length > 0 
+      ? songsWithBpm.reduce((sum, s) => sum + s.bpm, 0) / songsWithBpm.length 
+      : null;
+
+    // Find unseen candidate songs
+    const candidates = await Song.find({ _id: { $nin: seenSongIds } });
+
+    // Score each candidate based on similarity
+    const scoredSongs = candidates.map(song => {
+      let score = 0;
+
+      // Artist match: +50 points (highest priority)
+      if (song.artist && preferredArtists.includes(song.artist)) {
+        score += 50;
+      }
+
+      // Genre match: +30 points
+      if (song.genre && preferredGenres.includes(song.genre)) {
+        score += 30;
+      }
+
+      // BPM similarity: +20 points (within ±10 BPM range)
+      if (avgBpm !== null && song.bpm !== null && Math.abs(song.bpm - avgBpm) <= 10) {
+        score += 20;
+      }
+
+      // Popularity tiebreaker: boost by vote ratio (0-10 points)
+      if (song.totalVotes > 0) {
+        const voteRatio = (song.likes / song.totalVotes) * 100;
+        score += Math.min(voteRatio / 10, 10);
+      }
+
+      return { ...song.toObject(), recommendationScore: score };
+    });
+
+    // Sort by recommendation score descending and return top 50
+    const recommendations = scoredSongs
+      .sort((a, b) => b.recommendationScore - a.recommendationScore)
+      .slice(0, 50);
 
     if (recommendations.length === 0) {
-      return res
-        .status(200)
-        .json({ message: "No more songs to rank, come back later!" });
+      return res.status(200).json({ 
+        message: "No more songs to rank, come back later!" 
+      });
     }
 
     res.status(200).json(recommendations);
@@ -41,10 +107,28 @@ router.get("/recommendations", protect, async (req, res) => {
 });
 
 // GET /api/songs/leaderboard
+// Returns songs sorted by vote ratio (highest to lowest)
+// voteRatio = (likes / totalVotes) * 100, or 0 if no votes
 router.get("/leaderboard", async (req, res) => {
   try {
-    const songs = await Song.find().sort({ likes: -1, totalVotes: -1, createdAt: -1 });
-    res.status(200).json(songs);
+    const songs = await Song.find();
+    
+    // Calculate vote ratio for each song
+    const songsWithRatio = songs.map(song => {
+      const songObj = song.toObject();
+      const voteRatio = song.totalVotes > 0 
+        ? (song.likes / song.totalVotes) * 100 
+        : 0;
+      return {
+        ...songObj,
+        voteRatio: Math.round(voteRatio * 100) / 100 // Round to 2 decimal places
+      };
+    });
+
+    // Sort by vote ratio descending (highest first)
+    songsWithRatio.sort((a, b) => b.voteRatio - a.voteRatio);
+
+    res.status(200).json(songsWithRatio);
   } catch (err) {
     console.error("Error fetching leaderboard:", err);
     res.status(500).json({ message: "Server error fetching leaderboard." });
@@ -130,6 +214,7 @@ router.post("/", protect, async (req, res) => {
       permalinkUrl: soundcloudUrl,
       previewUrl: null,
       streamAccess: null,
+      genre: null,
     };
 
     try {
@@ -149,6 +234,8 @@ router.post("/", protect, async (req, res) => {
       permalinkUrl: soundcloudMeta.permalinkUrl,
       previewUrl: soundcloudMeta.previewUrl,
       streamAccess: soundcloudMeta.streamAccess,
+      genre: soundcloudMeta.genre,
+      bpm: soundcloudMeta.bpm || null,
       likes: 0,
       dislikes: 0,
       totalVotes: 0,
