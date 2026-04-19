@@ -78,7 +78,13 @@ function Feed() {
   // Fetch personalized recommendations based on user's votes
   const fetchRecommendations = async () => {
     try {
-      const response = await apiFetch('http://localhost:5000/api/songs/recommendations');
+      const token = localStorage.getItem("token");
+      
+      const response = await apiFetch('http://localhost:5000/api/songs/recommendations', {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
       if (!response) return;
       const data = await response.json();
       if (response.ok && Array.isArray(data) && data.length > 0) {
@@ -94,7 +100,8 @@ function Feed() {
         })));
         setIndex(0); // Reset to show fresh recommendations from top
       } else {
-        setSongs(testSongs);
+        setSongs([]); // No more songs to recommend
+        setIndex(0);
       }
     } catch {
       setSongs(testSongs);
@@ -141,7 +148,7 @@ function Feed() {
   );
 
   const remaining = filteredSongs.slice(index, index + 3);
-  const done = index >= filteredSongs.length && filteredSongs.length > 0;
+  const done = filteredSongs.length === 0 || index >= filteredSongs.length;
 
   return (
     <div style={{
@@ -175,10 +182,21 @@ function Feed() {
       />
 
       {done ? (
-        <div style={{ fontFamily: 'sans-serif', textAlign: 'center' }}>
-          <p>You've seen everything for now.</p>
-          <button onClick={() => setIndex(0)} style={{ padding: '8px 20px', cursor: 'pointer' }}>
-            Start over
+        <div style={{ fontFamily: 'sans-serif', textAlign: 'center', color: '#e2d9f3' }}>
+          <p>No more songs to rank, come back later!</p>
+          <button 
+            onClick={fetchRecommendations} 
+            style={{ 
+              padding: '8px 20px', 
+              cursor: 'pointer', 
+              background: '#7c3aed', 
+              color: '#fff', 
+              border: '1px solid #a855f7', 
+              borderRadius: 8,
+              fontSize: 14,
+            }}
+          >
+            Check for new songs
           </button>
         </div>
       ) : (

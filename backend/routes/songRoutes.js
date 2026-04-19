@@ -26,10 +26,13 @@ router.get("/recommendations", protect, async (req, res) => {
     
     // Get all songs user has voted on
     const userVotes = await Vote.find({ user: userId }).populate('song');
-    const seenSongIds = userVotes.map((vote) => vote.song._id);
+    
+    // Filter out votes where song is null (deleted songs)
+    const validVotes = userVotes.filter(vote => vote.song !== null);
+    const seenSongIds = validVotes.map((vote) => vote.song._id);
 
     // Get liked songs only
-    const likedVotes = userVotes.filter(vote => vote.vote_type === 'like');
+    const likedVotes = validVotes.filter(vote => vote.vote_type === 'like');
     
     // If user is new (no likes), return top songs by votes
     if (likedVotes.length === 0) {
@@ -52,7 +55,7 @@ router.get("/recommendations", protect, async (req, res) => {
     const preferredGenres = [...new Set(likedSongs.map(s => s.genre).filter(g => g))];
     
     // Calculate average BPM from liked songs with BPM data
-    const songsWithBpm = likedSongs.filter(s => s.bpm !== null);
+    const songsWithBpm = likedSongs.filter(s => s.bpm !== null && s.bpm !== undefined);
     const avgBpm = songsWithBpm.length > 0 
       ? songsWithBpm.reduce((sum, s) => sum + s.bpm, 0) / songsWithBpm.length 
       : null;
@@ -75,13 +78,15 @@ router.get("/recommendations", protect, async (req, res) => {
       }
 
       // BPM similarity: +20 points (within ±10 BPM range)
-      if (avgBpm !== null && song.bpm !== null && Math.abs(song.bpm - avgBpm) <= 10) {
+      if (avgBpm !== null && song.bpm !== null && song.bpm !== undefined && Math.abs(song.bpm - avgBpm) <= 10) {
         score += 20;
       }
 
       // Popularity tiebreaker: boost by vote ratio (0-10 points)
-      if (song.totalVotes > 0) {
-        const voteRatio = (song.likes / song.totalVotes) * 100;
+      const totalVotes = song.totalVotes || 0;
+      const likes = song.likes || 0;
+      if (totalVotes > 0) {
+        const voteRatio = (likes / totalVotes) * 100;
         score += Math.min(voteRatio / 10, 10);
       }
 
