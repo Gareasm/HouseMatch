@@ -1,29 +1,59 @@
 const Song = require('../models/Song');
+const songData = require('./songs_data.json');
+const { resolveTrack } = require('../utils/soundcloud');
 const User = require('../models/User');
-const Song_Data = require('./songs_data.json');
 
-const seedDatabase = async () => {
-    try {
-        // Clear existing data
-        await Song.deleteMany({});
-        console.log('Existing songs cleared');
+const populate_song_database = async () => {
+	try {
+		await Song.deleteMany();
+		console.log('Existing songs cleared');
 
-        const defaultUser = await User.findOne();
-        if (!defaultUser) {
-            throw new Error('No users found. Seed users before songs.');
-        }
+		const users = await User.find();
 
-        const songsWithSubmittedBy = Song_Data.map((song) => ({
-            ...song,
-            submittedBy: defaultUser._id,
-        }));
+		const enrichedSongs = [];
 
-        // Insert new song data
-        await Song.insertMany(songsWithSubmittedBy);
-        console.log('Successfully seeded database with song data');
-    } catch (error) {
-        console.error('Error seeding database:', error);
-    }
+		for (const song of songData) {
+			let meta = {
+				soundcloudTrackId: null,
+				artworkUrl: null,
+				permalinkUrl: song.soundcloudUrl,
+				previewUrl: null,
+				streamAccess: null,
+			};
+
+			try {
+				meta = await resolveTrack(song.soundcloudUrl);
+				console.log('Resolved:', song.title);
+			} catch (err) {
+				console.error("FAILED:", song.title);
+                console.error(err.response?.data || err.message || err);
+			}
+
+			enrichedSongs.push({
+				title: song.title,
+				artist: song.artist,
+				soundcloudUrl: song.soundcloudUrl,
+				normalizedSoundcloudUrl: song.soundcloudUrl.trim().toLowerCase().replace(/\/$/, ''),
+				submittedBy: users[0]._id,
+
+				soundcloudTrackId: meta.soundcloudTrackId,
+				artworkUrl: meta.artworkUrl,
+				permalinkUrl: meta.permalinkUrl,
+				previewUrl: meta.previewUrl,
+				streamAccess: meta.streamAccess,
+
+				likes: 0,
+				dislikes: 0,
+				totalVotes: 0,
+			});
+		}
+
+		await Song.insertMany(enrichedSongs);
+
+		console.log('Songs seeded with SoundCloud data');
+	} catch (err) {
+		console.error('Error seeding songs:', err);
+	}
 };
 
-module.exports = seedDatabase;
+module.exports = populate_song_database;

@@ -3,6 +3,7 @@ const router = express.Router();
 const Song = require("../models/Song");
 const Vote = require("../models/Vote");
 const { protect, admin } = require("../middleware/authMiddleware");
+const { resolveTrack } = require("../utils/soundcloud");
 
 //GET /api/songs
 //fetch all songs for the feed
@@ -123,12 +124,31 @@ router.post("/", protect, async (req, res) => {
       });
     }
 
+    let soundcloudMeta = {
+      soundcloudTrackId: null,
+      artworkUrl: null,
+      permalinkUrl: soundcloudUrl,
+      previewUrl: null,
+      streamAccess: null,
+    };
+
+    try {
+      soundcloudMeta = await resolveTrack(soundcloudUrl);
+    } catch (err) {
+      console.error("SoundCloud enrichment failed:", err.message);
+    }
+
     const newSong = await Song.create({
       title,
       artist,
       soundcloudUrl,
       normalizedSoundcloudUrl: normalizedUrl,
       submittedBy: req.user.id,
+      soundcloudTrackId: soundcloudMeta.soundcloudTrackId,
+      artworkUrl: soundcloudMeta.artworkUrl,
+      permalinkUrl: soundcloudMeta.permalinkUrl,
+      previewUrl: soundcloudMeta.previewUrl,
+      streamAccess: soundcloudMeta.streamAccess,
       likes: 0,
       dislikes: 0,
       totalVotes: 0,
