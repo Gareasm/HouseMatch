@@ -72,7 +72,7 @@ function Home() {
 
       {/* Features */}
       <section id="features" className="features">
-        <h2>Placeholder Features Section</h2>
+        <h2>Features</h2>
         <div className="feature-grid">
           <div className="feature-card">
             <div className="feature-icon">🔥</div>
