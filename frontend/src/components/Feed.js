@@ -75,30 +75,42 @@ function Feed() {
   const [index, setIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    const fetchSongs = async () => {
-      try {
-        const response = await apiFetch('http://localhost:5000/api/songs');
-        if (!response) return;
-        const data = await response.json();
-        if (response.ok && Array.isArray(data) && data.length > 0) {
-          setSongs(data.map((song, i) => ({
-            id: song._id || i,
-            title: song.title,
-            artist: song.artist || '',
-            albumArt: song.artworkUrl || null,
-            previewUrl: song.previewUrl || null,
-            streamAccess: song.streamAccess || null,
-            soundcloudUrl: song.permalinkUrl || song.soundcloudUrl || null,
-          })));
-        } else {
-          setSongs(testSongs);
-        }
-      } catch {
-        setSongs(testSongs);
+  // Fetch personalized recommendations based on user's votes
+  const fetchRecommendations = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      
+      const response = await apiFetch('http://localhost:5000/api/songs/recommendations', {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+      if (!response) return;
+      const data = await response.json();
+      if (response.ok && Array.isArray(data) && data.length > 0) {
+        setSongs(data.map((song, i) => ({
+          id: song._id || i,
+          title: song.title,
+          artist: song.artist || '',
+          albumArt: song.artworkUrl || null,
+          previewUrl: song.previewUrl || null,
+          streamAccess: song.streamAccess || null,
+          soundcloudUrl: song.permalinkUrl || song.soundcloudUrl || null,
+          recommendationScore: song.recommendationScore || 0,
+        })));
+        setIndex(0); // Reset to show fresh recommendations from top
+      } else {
+        setSongs([]); // No more songs to recommend
+        setIndex(0);
       }
-    };
-    fetchSongs();
+    } catch {
+      setSongs(testSongs);
+    }
+  };
+
+  // Load recommendations on component mount
+  useEffect(() => {
+    fetchRecommendations();
   }, []);
 
   const handleSearchChange = (e) => {
@@ -113,6 +125,7 @@ function Feed() {
 
       const token = localStorage.getItem("token");
 
+      // Record the vote
       await fetch(`http://localhost:5000/api/songs/${song.id}/vote`, {
         method: "POST",
         headers: {
@@ -122,7 +135,8 @@ function Feed() {
         body: JSON.stringify({ vote_type: voteType }),
       });
 
-      setIndex(i => i + 1);
+      // Refresh recommendations based on updated preferences
+      await fetchRecommendations();
     } catch (err) {
       console.error("Vote failed:", err);
     }
@@ -134,7 +148,7 @@ function Feed() {
   );
 
   const remaining = filteredSongs.slice(index, index + 3);
-  const done = index >= filteredSongs.length && filteredSongs.length > 0;
+  const done = filteredSongs.length === 0 || index >= filteredSongs.length;
 
   return (
     <div style={{
@@ -168,10 +182,21 @@ function Feed() {
       />
 
       {done ? (
-        <div style={{ fontFamily: 'sans-serif', textAlign: 'center' }}>
-          <p>You've seen everything for now.</p>
-          <button onClick={() => setIndex(0)} style={{ padding: '8px 20px', cursor: 'pointer' }}>
-            Start over
+        <div style={{ fontFamily: 'sans-serif', textAlign: 'center', color: '#e2d9f3' }}>
+          <p>No more songs to rank, come back later!</p>
+          <button 
+            onClick={fetchRecommendations} 
+            style={{ 
+              padding: '8px 20px', 
+              cursor: 'pointer', 
+              background: '#7c3aed', 
+              color: '#fff', 
+              border: '1px solid #a855f7', 
+              borderRadius: 8,
+              fontSize: 14,
+            }}
+          >
+            Check for new songs
           </button>
         </div>
       ) : (
