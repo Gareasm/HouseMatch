@@ -42,7 +42,7 @@ function Home() {
       <section className="hero" ref={heroRef}>
         <div className="hero-content">
           <h1 className="hero-title">HouseMatch</h1>
-          <p className="hero-tagline">tagline here</p>
+          <p className="hero-tagline">Let the Music Play.</p>
         </div>
       </section>
 
