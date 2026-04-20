@@ -1,11 +1,26 @@
-import { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 import Navbar from './Navbar';
 import './Home.css';
 
 function Home() {
   const heroRef = useRef(null);
   const vantaRef = useRef(null);
+  const [topTrack, setTopTrack] = useState(null);
+
+  useEffect(() => {
+    const fetchTopTrack = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/songs/leaderboard');
+        const data = await res.json();
+        if (res.ok && Array.isArray(data) && data.length > 0) {
+          setTopTrack(data[0]);
+        }
+      } catch {
+        // silently fail, placeholder text will show
+      }
+    };
+    fetchTopTrack();
+  }, []);
 
   useEffect(() => {
     let vantaEffect = null;
@@ -50,8 +65,8 @@ function Home() {
       <section className="top-track-section">
         <div className="top-track-card">
           <h2>Today's Top Track</h2>
-          <p>Track Name: Placeholder</p>
-          <p>Artist: Placeholder</p>
+          <p>Track Name: {topTrack ? topTrack.title : 'Placeholder'}</p>
+          <p>Artist: {topTrack ? topTrack.artist : 'Placeholder'}</p>
         </div>
       </section>
 
@@ -61,7 +76,7 @@ function Home() {
         <div className="feature-grid">
           <div className="feature-card">
             <div className="feature-icon">🔥</div>
-            <h3> Discover </h3>
+            <h3>Discover</h3>
             <p>Find a new favorite!</p>
           </div>
           <div className="feature-card">
@@ -78,7 +93,7 @@ function Home() {
       </section>
 
       <footer className="footer">
-        <p>© Super official copyright.</p>
+        <p>© HouseMatch. CEN 3031.</p>
       </footer>
     </div>
   );
