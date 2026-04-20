@@ -33,6 +33,7 @@ function Navbar() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -46,13 +47,18 @@ function Navbar() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await submitSong({ title: form.title, artist: form.artist, soundcloudUrl: form.url });
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setShowForm(false);
-      setForm(emptyForm);
-    }, 1500);
+    setSubmitError('');
+    try {
+      await submitSong({ title: form.title, artist: form.artist, soundcloudUrl: form.url });
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setShowForm(false);
+        setForm(emptyForm);
+      }, 1500);
+    } catch (err) {
+      setSubmitError(err.message || 'Failed to submit song.');
+    }
   };
 
   if (loggedOut) {
@@ -124,11 +130,12 @@ function Navbar() {
                 />
                 <div style={styles.formActions}>
                   <button type="button" onClick={
-                    () => setShowForm(false)} 
+                    () => { setShowForm(false); setSubmitError(''); }} 
                     style={styles.btnCancel}>Cancel</button>
                   <button type="submit" 
                     style={styles.btnSubmit}>Submit</button>
                 </div>
+                {submitError && <p style={styles.errorMsg}>{submitError}</p>}
               </form>
             )}
           </div>
@@ -259,6 +266,7 @@ const styles = {
     fontWeight: 600,
   },
   successMsg: { color: '#a855f7', textAlign: 'center', padding: '1rem 0' },
+  errorMsg: { color: '#ef4444', fontSize: 13, textAlign: 'center', marginTop: '0.5rem' },
 };
 
 export default Navbar;
