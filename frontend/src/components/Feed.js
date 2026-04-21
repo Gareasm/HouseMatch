@@ -223,9 +223,6 @@ function Feed() {
         </div>
       )}
 
-      <p style={{ fontFamily: 'sans-serif', fontSize: 13, color: '#666' }}>
-        {filteredSongs.length > 0 ? `${Math.min(index + 1, filteredSongs.length)} / ${filteredSongs.length}` : ''}
-      </p>
     </div>
   );
 }
