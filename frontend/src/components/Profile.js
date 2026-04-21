@@ -10,6 +10,41 @@ function Profile() {
   const [submittedSongs, setSubmittedSongs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [stats, setStats] = useState({ liked: 0, disliked: 0, submitted: 0 });
+  const [likedSongs, setLikedSongs] = useState([]);
+  const [likedLoading, setLikedLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/users/me/stats', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) setStats(data);
+      } catch {
+        // silently fail
+      }
+    };
+    fetchStats();
+  }, [token]);
+
+  useEffect(() => {
+    const fetchLikedSongs = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/users/me/liked-songs', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) setLikedSongs(data);
+      } catch {
+        // silently fail
+      } finally {
+        setLikedLoading(false);
+      }
+    };
+    fetchLikedSongs();
+  }, [token]);
 
   useEffect(() => {
     const fetchSubmittedSongs = async () => {
@@ -60,17 +95,17 @@ function Profile() {
 
           <div className="profile-stats">
             <div className="stat-card">
-              <span className="stat-number">{submittedSongs.length}</span>
+              <span className="stat-number">{stats.submitted}</span>
               <span className="stat-label">Submitted</span>
             </div>
 
             <div className="stat-card">
-              <span className="stat-number">0</span>
+              <span className="stat-number">{stats.liked}</span>
               <span className="stat-label">Liked</span>
             </div>
 
             <div className="stat-card">
-              <span className="stat-number">0</span>
+              <span className="stat-number">{stats.disliked}</span>
               <span className="stat-label">Passed</span>
             </div>
           </div>
@@ -131,6 +166,32 @@ function Profile() {
               </div>
             </section>
           )}
+
+          {/* Liked Songs */}
+          <section className="profile-section">
+            <h2 className="profile-section-title">Liked Songs</h2>
+            {likedLoading ? (
+              <p className="profile-empty">Loading...</p>
+            ) : likedSongs.length === 0 ? (
+              <p className="profile-empty">No liked songs yet.</p>
+            ) : (
+              <div className="liked-songs-list">
+                {likedSongs.map(song => (
+                  <div key={song._id} className="liked-song-card">
+                    <div
+                      className="liked-song-art"
+                      style={song.artworkUrl ? { backgroundImage: `url(${song.artworkUrl})`, backgroundSize: 'cover' } : {}}
+                    />
+                    <div>
+                      <p className="liked-song-title">{song.title}</p>
+                      <p className="liked-song-artist">{song.artist}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
         </div>
       </div>
     </>

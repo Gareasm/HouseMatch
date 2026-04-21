@@ -21,11 +21,13 @@ router.get('/users', protect, admin, async (req, res) => {
 router.get('/users/me/stats', protect, async (req, res) => {
     try {
         const userId = req.user.id;
-        const [liked, disliked] = await Promise.all([
+        const Song = require('../models/Song');
+        const [liked, disliked, submitted] = await Promise.all([
             Vote.countDocuments({ user: userId, vote_type: 'like' }),
             Vote.countDocuments({ user: userId, vote_type: 'dislike' }),
+            Song.countDocuments({ submittedBy: userId }),
         ]);
-        res.status(200).json({ liked, disliked, total: liked + disliked });
+        res.status(200).json({ liked, disliked, submitted });
     }
     catch (err) {
         console.error("Error fetching user stats:", err);
