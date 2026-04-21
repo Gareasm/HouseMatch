@@ -89,7 +89,7 @@ function Profile() {
 
             <div>
               <h1 className="profile-name">@{username}</h1>
-              <p className="profile-meta">Member since 2025 · House music enthusiast</p>
+              <p className="profile-meta">Member since 2026 · House music enthusiast</p>
             </div>
           </div>
 
