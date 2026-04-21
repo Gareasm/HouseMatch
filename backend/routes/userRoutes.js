@@ -39,7 +39,7 @@ router.get('/users/me/stats', protect, async (req, res) => {
 router.get('/users/me/liked-songs', protect, async (req, res) => {
     try {
         const votes = await Vote.find({ user: req.user.id, vote_type: 'like' })
-            .populate('song', 'title artist artworkUrl')
+            .populate('song', 'title artist artworkUrl soundcloudUrl permalinkUrl')
             .sort({ createdAt: -1 });
         const songs = votes.map(v => v.song).filter(Boolean);
         res.status(200).json(songs);
