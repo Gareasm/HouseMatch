@@ -182,10 +182,20 @@ function Profile() {
                       className="liked-song-art"
                       style={song.artworkUrl ? { backgroundImage: `url(${song.artworkUrl})`, backgroundSize: 'cover' } : {}}
                     />
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <p className="liked-song-title">{song.title}</p>
                       <p className="liked-song-artist">{song.artist}</p>
                     </div>
+                    {(song.soundcloudUrl || song.permalinkUrl) && (
+                      <a
+                        href={song.permalinkUrl || song.soundcloudUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="profile-song-link"
+                      >
+                        Open
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>
