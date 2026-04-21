@@ -65,14 +65,26 @@ function Home() {
       <section className="top-track-section">
         <div className="top-track-card">
           <h2>Today's Top Track</h2>
-          <p>Track Name: {topTrack ? topTrack.title : 'Placeholder'}</p>
-          <p>Artist: {topTrack ? topTrack.artist : 'Placeholder'}</p>
+          <div className="top-track-body">
+            <div className="top-track-info">
+              <p>Track Name: {topTrack ? topTrack.title : 'Placeholder'}</p>
+              <p>Artist: {topTrack ? topTrack.artist : 'Placeholder'}</p>
+              {topTrack && <p>{topTrack.likes ?? 0} likes</p>}
+            </div>
+            {topTrack?.artworkUrl && (
+              <img
+                src={topTrack.artworkUrl}
+                alt={`${topTrack.title} artwork`}
+                className="top-track-artwork"
+              />
+            )}
+          </div>
         </div>
       </section>
 
       {/* Features */}
       <section id="features" className="features">
-        <h2>Placeholder Features Section</h2>
+        <h2>Beyond the Algorithm: Real People, Real House </h2>
         <div className="feature-grid">
           <div className="feature-card">
             <div className="feature-icon">🔥</div>
