@@ -6,7 +6,8 @@ const User = require("../models/User");
 
 //register route
 router.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, role } = req.body;
+  const assignedRole = role === 'admin' ? 'admin' : 'member';
 
   try {
     const existing = await User.findOne({ $or: [{ email }, { username }] });
@@ -16,7 +17,7 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({ username, email, password: hashedPassword });
+    const user = new User({ username, email, password: hashedPassword, role: assignedRole });
     await user.save();
 
     res.status(201).json({ message: "User registered successfully" });

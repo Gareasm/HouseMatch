@@ -7,7 +7,8 @@ function Register() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'member'
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -66,6 +67,7 @@ function Register() {
           username: formData.email.split('@')[0], // Generate username from email
           email: formData.email,
           password: formData.password,
+          role: formData.role,
         }),
       });
 
@@ -130,6 +132,19 @@ function Register() {
               placeholder="Confirm your password"
               required
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="role">Account Type</label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+            >
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
           </div>
 
           <button type="submit" className="register-button" disabled={loading}>
