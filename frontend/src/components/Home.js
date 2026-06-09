@@ -10,7 +10,10 @@ function Home() {
   useEffect(() => {
     const fetchTopTrack = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/songs/leaderboard');
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:5000/api/songs/leaderboard', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await res.json();
         if (res.ok && Array.isArray(data) && data.length > 0) {
           setTopTrack(data[0]);
