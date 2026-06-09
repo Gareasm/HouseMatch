@@ -25,6 +25,167 @@
   font-size: 0.95rem;
 }
 
+.lb-timeframe {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.lb-timeframe-btn {
+  background: #1a1a1a;
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  border-radius: 999px;
+  color: #e2d9f3;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  min-height: 38px;
+  padding: 0.45rem 1.1rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.lb-timeframe-btn:hover {
+  background: #242424;
+  border-color: rgba(192, 132, 252, 0.7);
+}
+
+.lb-timeframe-btn:focus,
+.lb-timeframe-btn:focus-visible {
+  outline: none;
+  border-color: #a855f7;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.22);
+}
+
+/* Active wins over :hover (equal specificity, declared later) so the color
+   updates immediately on click instead of waiting for the cursor to leave. */
+.lb-timeframe-btn--active,
+.lb-timeframe-btn--active:hover {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+}
+
+.lb-sort {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.lb-sort-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 190px;
+  position: relative;
+}
+
+.lb-sort-label {
+  color: #e2d9f3;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.lb-sort-trigger {
+  align-items: center;
+  background: #1a1a1a;
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  border-radius: 8px;
+  color: #e2d9f3;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.875rem;
+  font-weight: 500;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0.75rem 0.9rem 0.75rem 1rem;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.lb-sort-trigger:hover {
+  background: #242424;
+  border-color: rgba(192, 132, 252, 0.7);
+}
+
+.lb-sort-trigger:focus,
+.lb-sort-trigger:focus-visible {
+  outline: none;
+  border-color: #a855f7;
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.22);
+}
+
+.lb-sort-trigger--open {
+  border-color: #a855f7;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.lb-sort-arrow {
+  border-bottom: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #c084fc;
+  display: block;
+  height: 0;
+  margin-left: 1rem;
+  transition: transform 0.2s ease;
+  width: 0;
+}
+
+.lb-sort-trigger--open .lb-sort-arrow {
+  transform: rotate(180deg);
+}
+
+.lb-sort-menu {
+  background: #1a1a1a;
+  border: 1px solid #a855f7;
+  border-top: 0;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.36);
+  left: 0;
+  overflow: hidden;
+  position: absolute;
+  right: 0;
+  top: calc(100% - 1px);
+  z-index: 10;
+}
+
+.lb-sort-option {
+  background: #1a1a1a;
+  border: 0;
+  color: #e2d9f3;
+  cursor: pointer;
+  display: block;
+  font: inherit;
+  font-size: 0.875rem;
+  padding: 0.8rem 1rem;
+  text-align: left;
+  transition: background-color 0.16s ease, color 0.16s ease;
+  width: 100%;
+}
+
+.lb-sort-option:hover,
+.lb-sort-option:focus,
+.lb-sort-option:focus-visible {
+  background: #292929;
+  color: #ffffff;
+  outline: none;
+}
+
+.lb-sort-option--selected {
+  background: #242024;
+  color: #f1e7ff;
+}
+
+.lb-sort-option:last-child {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
 .lb-list {
   display: flex;
   flex-direction: column;
@@ -40,6 +201,9 @@
   border-radius: 10px;
   padding: 1rem 1.25rem;
   transition: all 0.2s;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 }
 
 .lb-row:hover {

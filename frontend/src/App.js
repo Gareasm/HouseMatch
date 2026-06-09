@@ -37,12 +37,15 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/home" element={<Navigate to="/" replace />} />
+        {/* Public routes — only the auth pages are reachable without login */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* Everything else (all app features) is locked behind login */}
+        <Route path="/" element={<AuthGuard><Home /></AuthGuard>} />
+        <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/leaderboard" element={<AuthGuard><Leaderboard /></AuthGuard>} />
         <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
         <Route
           path="/feed"
@@ -52,14 +55,7 @@ function App() {
             </AuthGuard>
           }
         />
-        <Route
-          path="/songs/:id"
-          element={
-            <AuthGuard>
-              <SongDetail />
-            </AuthGuard>
-          }
-        />
+        <Route path="/songs/:id" element={<AuthGuard><SongDetail /></AuthGuard>} />
       </Routes>
     </BrowserRouter>
   );

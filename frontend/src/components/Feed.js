@@ -15,7 +15,7 @@ const testSongs = [
   { id: 8, title: "Turn Me Up", artist: "Chris Lake", albumArt: null, spotifyUrl: null, soundcloudUrl: null },
 ];
 
-function SwipeCard({ song, onLike, onPass, isTop }) {
+function SwipeCard({ song, onLike, onPass, onUnavailable, isTop }) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
@@ -65,6 +65,8 @@ function SwipeCard({ song, onLike, onPass, isTop }) {
         albumArt={song.albumArt}
         soundcloudUrl={song.soundcloudUrl}
         previewUrl={song.previewUrl}
+        isActive={isTop}
+        onUnavailable={onUnavailable}
       />
     </motion.div>
   );
@@ -74,6 +76,7 @@ function Feed() {
   const [songs, setSongs] = useState([]);
   const [index, setIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const handledUnavailable = useRef(new Set());
 
   // Fetch personalized recommendations based on user's votes
   const fetchRecommendations = async () => {
@@ -116,6 +119,30 @@ function Feed() {
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
     setIndex(0);
+  };
+
+  // A track the SoundCloud player couldn't load (removed / invalid link). Ask the
+  // server to confirm and delete it; if confirmed, drop it from the current feed
+  // so the user moves on. The server only deletes genuinely-gone tracks, so a
+  // valid-but-restricted track stays (it just shows the "not available" notice).
+  const handleUnavailable = async (songId) => {
+    if (!songId || handledUnavailable.current.has(songId)) return;
+    handledUnavailable.current.add(songId);
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5000/api/songs/${songId}/validate`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data?.removed) {
+        setSongs((prev) => prev.filter((s) => String(s.id) !== String(songId)));
+        setIndex(0);
+      }
+    } catch (err) {
+      console.error("Song validation failed:", err);
+    }
   };
 
   const handleVote = async (voteType) => {
@@ -200,7 +227,7 @@ function Feed() {
           </button>
         </div>
       ) : (
-        <div style={{ position: 'relative', width: 280, height: 380 }}>
+        <div style={{ position: 'relative', width: 280, height: 390 }}>
           {[...remaining].reverse().map((song, i) => {
             const isTop = i === remaining.length - 1;
             return (
@@ -210,6 +237,7 @@ function Feed() {
                 isTop={isTop}
                 onLike={() => handleVote("like")}
                 onPass={() => handleVote("dislike")}
+                onUnavailable={() => handleUnavailable(song.id)}
               />
             );
           })}
@@ -217,9 +245,9 @@ function Feed() {
       )}
 
       {!done && (
-        <div style={{ display: 'flex', gap: 32 }}>
-          <button onClick={() => handleVote("dislike")}>Pass</button>
-          <button onClick={() => handleVote("like")}>Like</button>
+        <div style={{ display: 'flex', gap: 24 }}>
+          <button onClick={() => handleVote("dislike")} style={passBtnStyle}>Pass</button>
+          <button onClick={() => handleVote("like")} style={likeBtnStyle}>Like</button>
         </div>
       )}
 
@@ -227,14 +255,28 @@ function Feed() {
   );
 }
 
-const btnStyle = () => ({
-  background: 'transparent',
-  color: '#333',
-  border: '1px solid #ccc',
+// Match the app's button language: purple primary (solid) + purple outline,
+// same radius/weight as the Navbar and "Add Song" buttons.
+const baseVoteBtn = {
   borderRadius: 8,
-  padding: '8px 24px',
-  fontSize: 14,
+  padding: '10px 30px',
+  fontSize: 15,
+  fontWeight: 600,
   cursor: 'pointer',
-});
+};
+
+const passBtnStyle = {
+  ...baseVoteBtn,
+  background: 'transparent',
+  color: '#e2d9f3',
+  border: '1px solid rgba(168, 85, 247, 0.4)',
+};
+
+const likeBtnStyle = {
+  ...baseVoteBtn,
+  background: '#7c3aed',
+  color: '#fff',
+  border: '1px solid #7c3aed',
+};
 
 export default Feed;

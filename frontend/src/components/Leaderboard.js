@@ -1,68 +1,69 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import './Leaderboard.css';
 
-// Retrive actual songs 
+// Retrive actual songs
 
 const PAGE_SIZE = 20;
 
 const placeholderSongs = [
   //auto generated
-  { id: 1, title: "Losing It", artist: "FISHER", voteRatio: 85.47, totalVotes: 142 },
-  { id: 2, title: "Rumble", artist: "Skrillex & Fred Again", voteRatio: 82.20, totalVotes: 118 },
-  { id: 3, title: "San Frandisco", artist: "Dom Dolla", voteRatio: 79.38, totalVotes: 97 },
-  { id: 4, title: "Jungle", artist: "Fred Again", voteRatio: 76.47, totalVotes: 85 },
-  { id: 5, title: "Turn Me Up", artist: "Chris Lake", voteRatio: 74.32, totalVotes: 74 },
-  { id: 6, title: "Pump The Brakes", artist: "Dom Dolla", voteRatio: 72.13, totalVotes: 61 },
-  { id: 7, title: "Sad Money", artist: "Dom Dolla", voteRatio: 68.87, totalVotes: 53 },
-  { id: 8, title: "Take It", artist: "FISHER", voteRatio: 65.00, totalVotes: 40 },
+  { id: 1, title: "Losing It", artist: "FISHER", likes: 121 },
+  { id: 2, title: "Rumble", artist: "Skrillex & Fred Again", likes: 97 },
+  { id: 3, title: "San Frandisco", artist: "Dom Dolla", likes: 77 },
+  { id: 4, title: "Jungle", artist: "Fred Again", likes: 65 },
+  { id: 5, title: "Turn Me Up", artist: "Chris Lake", likes: 55 },
+  { id: 6, title: "Pump The Brakes", artist: "Dom Dolla", likes: 44 },
+  { id: 7, title: "Sad Money", artist: "Dom Dolla", likes: 36 },
+  { id: 8, title: "Take It", artist: "FISHER", likes: 26 },
 ];
 
 const medals = ['#1', '#2', '#3'];
 
+// Time windows for ranking by likes within the period.
+const timeframeOptions = [
+  { value: 'week', label: 'This Week' },
+  { value: 'month', label: 'This Month' },
+  { value: 'year', label: 'This Year' },
+  { value: 'all', label: 'All Time' },
+];
+
 function Leaderboard() {
   const [songs, setSongs] = useState([]);
   const [page, setPage] = useState(1);
-  const [sortBy, setSortBy] = useState('ratio'); // 'ratio' | 'votes' | 'recent'
+  const [timeframe, setTimeframe] = useState('all'); // 'week' | 'month' | 'year' | 'all'
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/songs/leaderboard');
+        const token = localStorage.getItem('token');
+        const res = await fetch(`http://localhost:5000/api/songs/leaderboard?timeframe=${timeframe}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         //leaderboard call
         const data = await res.json();
         if (res.ok && Array.isArray(data) && data.length > 0) {
           setSongs(data);
-        } 
+        }
         else {
           setSongs(placeholderSongs);
         }
-      } 
+      }
       catch {
         setSongs(placeholderSongs);
       }
     };
     fetchLeaderboard();
-  }, 
-  []);
+  },
+  [timeframe]);
   const totalPages = Math.max(1, Math.ceil(songs.length / PAGE_SIZE));
 
-  // Sort songs based on sortBy state
-  const getSortedSongs = () => {
-    const sorted = [...songs];
-    
-    switch(sortBy) {
-      case 'votes':
-        return sorted.sort((a, b) => (b.totalVotes || 0) - (a.totalVotes || 0));
-      case 'recent':
-        return sorted.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-      case 'ratio':
-      default:
-        return sorted.sort((a, b) => (b.voteRatio || 0) - (a.voteRatio || 0));
-    }
-  };
-
-  const sortedSongs = getSortedSongs();
+  // Rank purely by like count (highest first).
+  const sortedSongs = useMemo(
+    () => [...songs].sort((a, b) => (b.likes || 0) - (a.likes || 0)),
+    [songs]
+  );
 
   const currentSongs = useMemo(() => {
     const startIndex = (page - 1) * PAGE_SIZE;
@@ -76,46 +77,44 @@ function Leaderboard() {
   }, [page, totalPages]);
 
   const startIndex = (page - 1) * PAGE_SIZE;
+  const selectedTimeframeLabel = timeframeOptions.find((option) => option.value === timeframe)?.label;
+
+  const handleTimeframeChange = (value) => {
+    setTimeframe(value);
+    setPage(1); // Reset to first page when timeframe changes
+  };
 
   return (
     <div className="lb-container">
       <Navbar />
       <div className="lb-content">
         <h1 className="lb-title">Leaderboard</h1>
-        <p className="lb-subtitle">Top tracks ranked by vote percentage</p>
+        <p className="lb-subtitle">Top tracks ranked by likes · {selectedTimeframeLabel}</p>
 
-        {/* Sort Dropdown */}
-        <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <label style={{ color: '#e2d9f3', fontSize: 14, fontWeight: 600 }}>Sort by:</label>
-            <select
-              value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value);
-                setPage(1); // Reset to first page when sorting changes
-              }}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: '1px solid #a855f7',
-                background: '#1a1a1a',
-                color: '#e2d9f3',
-                fontSize: 14,
-                cursor: 'pointer',
-                fontWeight: 500,
-              }}
+        {/* Timeframe filter */}
+        <div className="lb-timeframe" role="tablist" aria-label="Leaderboard timeframe">
+          {timeframeOptions.map((option) => (
+            <button
+              type="button"
+              key={option.value}
+              role="tab"
+              aria-selected={timeframe === option.value}
+              className={`lb-timeframe-btn ${timeframe === option.value ? 'lb-timeframe-btn--active' : ''}`}
+              onClick={() => handleTimeframeChange(option.value)}
             >
-              <option value="ratio">Highest Score</option>
-              <option value="votes">Most Voted</option>
-              <option value="recent">Most Recent</option>
-            </select>
-          </div>
+              {option.label}
+            </button>
+          ))}
         </div>
 
         <div className="lb-list">
           {currentSongs.map((song, i) => (
-            //Credit to W3Schools HTML Tutorial 
-            <div key={song._id || song.id} className={`lb-row ${startIndex + i < 3 ? 'lb-row--top' : ''}`}>
+            //Credit to W3Schools HTML Tutorial
+            <Link
+              to={`/songs/${song._id || song.id}`}
+              key={song._id || song.id}
+              className={`lb-row ${startIndex + i < 3 ? 'lb-row--top' : ''}`}
+            >
               <span className="lb-rank">
                 {startIndex + i < 3 ? medals[startIndex + i] : `#${startIndex + i + 1}`}
               </span>
@@ -123,8 +122,8 @@ function Leaderboard() {
                 <span className="lb-track-title">{song.title}</span>
                 <span className="lb-track-artist">{song.artist}</span>
               </div>
-              <span className="lb-likes">{song.voteRatio?.toFixed(1) ?? 0}% · {song.totalVotes ?? 0} votes</span>
-            </div>
+              <span className="lb-likes">{song.likes ?? 0} {(song.likes ?? 0) === 1 ? 'like' : 'likes'}</span>
+            </Link>
           ))}
           {songs.length > PAGE_SIZE && (
             <div

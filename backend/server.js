@@ -5,6 +5,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/userRoutes");
 const songRoutes = require("./routes/songRoutes");
+const { startSongSweep } = require("./utils/songMaintenance");
 
 const app = express();
 app.use(cors());
@@ -20,6 +21,7 @@ const PORT = process.env.PORT || 5000;
 connectDB()
   .then(() => {
     app.listen(PORT, () => console.log(`server is running on ${PORT}`));
+    startSongSweep();
   })
   .catch((err) => {
     console.error("DB connection failed:", err.message);

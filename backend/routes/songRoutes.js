@@ -4,10 +4,11 @@ const Song = require("../models/Song");
 const Vote = require("../models/Vote");
 const { protect, admin } = require("../middleware/authMiddleware");
 const { resolveTrack } = require("../utils/soundcloud");
+const { validateAndPruneSong } = require("../utils/songMaintenance");
 
 //GET /api/songs
 //fetch all songs for the feed
-router.get("/", async (req, res) => {
+router.get("/", protect, async (req, res) => {
   try {
     const songs = await Song.find().sort({ createdAt: -1 });
     res.status(200).json(songs);
@@ -111,27 +112,68 @@ router.get("/recommendations", protect, async (req, res) => {
   }
 });
 
-// GET /api/songs/leaderboard
-// Returns songs sorted by vote ratio (highest to lowest)
-// voteRatio = (likes / totalVotes) * 100, or 0 if no votes
-router.get("/leaderboard", async (req, res) => {
+// GET /api/songs/leaderboard?timeframe=week|month|year|all
+// Returns all songs with vote stats, sorted by like count (highest to lowest).
+// - "all" (default) uses each song's all-time denormalized counters.
+// - "week" / "month" / "year" recompute likes/dislikes/totalVotes from the Vote
+//   collection over the last 7 / 30 / 365 days (by vote createdAt).
+const LEADERBOARD_TIMEFRAME_DAYS = { week: 7, month: 30, year: 365 };
+
+router.get("/leaderboard", protect, async (req, res) => {
   try {
+    const timeframe = req.query.timeframe || "all";
+
+    if (timeframe !== "all" && !LEADERBOARD_TIMEFRAME_DAYS[timeframe]) {
+      return res.status(400).json({
+        message: "Invalid timeframe. Use week, month, year, or all.",
+      });
+    }
+
     const songs = await Song.find();
-    
-    // Calculate vote ratio for each song
-    const songsWithRatio = songs.map(song => {
+
+    // For a bounded timeframe, tally votes cast within the window per song.
+    let statsBySong = null;
+    if (timeframe !== "all") {
+      const days = LEADERBOARD_TIMEFRAME_DAYS[timeframe];
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+      const grouped = await Vote.aggregate([
+        { $match: { createdAt: { $gte: since } } },
+        {
+          $group: {
+            _id: "$song",
+            likes: { $sum: { $cond: [{ $eq: ["$vote_type", "like"] }, 1, 0] } },
+            dislikes: { $sum: { $cond: [{ $eq: ["$vote_type", "dislike"] }, 1, 0] } },
+          },
+        },
+      ]);
+
+      statsBySong = new Map(grouped.map((g) => [String(g._id), g]));
+    }
+
+    const songsWithRatio = songs.map((song) => {
       const songObj = song.toObject();
-      const voteRatio = song.totalVotes > 0 
-        ? (song.likes / song.totalVotes) * 100 
-        : 0;
+
+      // All-time uses denormalized counters; windowed uses the aggregation,
+      // defaulting to zero for songs with no votes in the window.
+      let { likes, dislikes, totalVotes } = songObj;
+      if (statsBySong) {
+        const s = statsBySong.get(String(song._id)) || { likes: 0, dislikes: 0 };
+        likes = s.likes;
+        dislikes = s.dislikes;
+        totalVotes = s.likes + s.dislikes;
+      }
+
       return {
         ...songObj,
-        voteRatio: Math.round(voteRatio * 100) / 100 // Round to 2 decimal places
+        likes,
+        dislikes,
+        totalVotes,
       };
     });
 
-    // Sort by vote ratio descending (highest first)
-    songsWithRatio.sort((a, b) => b.voteRatio - a.voteRatio);
+    // Sort by like count descending (highest first)
+    songsWithRatio.sort((a, b) => b.likes - a.likes);
 
     res.status(200).json(songsWithRatio);
   } catch (err) {
@@ -157,7 +199,7 @@ router.get("/mine", protect, async (req, res) => {
 
 //GET /api/songs/:id
 //fetch one song by ID
-router.get("/:id", async (req, res) => {
+router.get("/:id", protect, async (req, res) => {
   try {
     const song = await Song.findById(req.params.id);
 
@@ -357,4 +399,27 @@ router.post("/:id/vote", protect, async (req, res) => {
     res.status(500).json({ message: "Server error while recording vote." });
   }
 });
+
+// POST /api/songs/:id/validate
+// Re-checks the song's SoundCloud URL. If SoundCloud reports the track no longer
+// exists (404/410 — removed or invalid link), delete the song and its votes so
+// it disappears from the feed, recommendations, and leaderboard. The server does
+// the check itself so a client can't delete a song that is actually still valid;
+// transient errors (rate limits, network) leave the song untouched.
+router.post("/:id/validate", protect, async (req, res) => {
+  try {
+    const song = await Song.findById(req.params.id);
+    if (!song) {
+      // Already gone (e.g. another client removed it) — tell the client to drop it.
+      return res.status(200).json({ removed: true });
+    }
+
+    const removed = await validateAndPruneSong(song);
+    res.status(200).json({ removed });
+  } catch (err) {
+    console.error("Error validating song:", err);
+    res.status(500).json({ message: "Server error while validating song." });
+  }
+});
+
 module.exports = router;
