@@ -4,6 +4,7 @@ const Song = require("../models/Song");
 const Vote = require("../models/Vote");
 const { protect, admin } = require("../middleware/authMiddleware");
 const { resolveTrack } = require("../utils/soundcloud");
+const { validateAndPruneSong } = require("../utils/songMaintenance");
 
 //GET /api/songs
 //fetch all songs for the feed
@@ -398,4 +399,27 @@ router.post("/:id/vote", protect, async (req, res) => {
     res.status(500).json({ message: "Server error while recording vote." });
   }
 });
+
+// POST /api/songs/:id/validate
+// Re-checks the song's SoundCloud URL. If SoundCloud reports the track no longer
+// exists (404/410 — removed or invalid link), delete the song and its votes so
+// it disappears from the feed, recommendations, and leaderboard. The server does
+// the check itself so a client can't delete a song that is actually still valid;
+// transient errors (rate limits, network) leave the song untouched.
+router.post("/:id/validate", protect, async (req, res) => {
+  try {
+    const song = await Song.findById(req.params.id);
+    if (!song) {
+      // Already gone (e.g. another client removed it) — tell the client to drop it.
+      return res.status(200).json({ removed: true });
+    }
+
+    const removed = await validateAndPruneSong(song);
+    res.status(200).json({ removed });
+  } catch (err) {
+    console.error("Error validating song:", err);
+    res.status(500).json({ message: "Server error while validating song." });
+  }
+});
+
 module.exports = router;

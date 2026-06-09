@@ -28,11 +28,18 @@ export default function TrackCard({
 	soundcloudUrl = null,
 	previewUrl = null,
 	isActive = false,
+	onUnavailable,
 }) {
 	const audioRef = useRef(null);
 	const [isPlaying, setIsPlaying] = useState(false);
 	// Real playability comes from the widget at runtime, not stale DB metadata.
 	const [available, setAvailable] = useState(true);
+
+	const handleAvailability = (ok) => {
+		setAvailable(ok);
+		// A removed/invalid track can't play — let the feed validate & drop it.
+		if (!ok && onUnavailable) onUnavailable();
+	};
 
 	const linkUrl = spotifyUrl || soundcloudUrl;
 	const linkLabel = spotifyUrl ? 'Open in Spotify' : soundcloudUrl ? 'Open in SoundCloud' : null;
@@ -79,7 +86,7 @@ export default function TrackCard({
 						trackUrl={soundcloudUrl}
 						isActive={isActive}
 						height={MEDIA_HEIGHT}
-						onAvailability={setAvailable}
+						onAvailability={handleAvailability}
 					/>
 				) : albumArt ? (
 					<img

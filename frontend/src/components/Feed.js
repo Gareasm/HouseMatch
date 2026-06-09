@@ -15,7 +15,7 @@ const testSongs = [
   { id: 8, title: "Turn Me Up", artist: "Chris Lake", albumArt: null, spotifyUrl: null, soundcloudUrl: null },
 ];
 
-function SwipeCard({ song, onLike, onPass, isTop }) {
+function SwipeCard({ song, onLike, onPass, onUnavailable, isTop }) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
@@ -66,6 +66,7 @@ function SwipeCard({ song, onLike, onPass, isTop }) {
         soundcloudUrl={song.soundcloudUrl}
         previewUrl={song.previewUrl}
         isActive={isTop}
+        onUnavailable={onUnavailable}
       />
     </motion.div>
   );
@@ -75,6 +76,7 @@ function Feed() {
   const [songs, setSongs] = useState([]);
   const [index, setIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const handledUnavailable = useRef(new Set());
 
   // Fetch personalized recommendations based on user's votes
   const fetchRecommendations = async () => {
@@ -117,6 +119,30 @@ function Feed() {
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
     setIndex(0);
+  };
+
+  // A track the SoundCloud player couldn't load (removed / invalid link). Ask the
+  // server to confirm and delete it; if confirmed, drop it from the current feed
+  // so the user moves on. The server only deletes genuinely-gone tracks, so a
+  // valid-but-restricted track stays (it just shows the "not available" notice).
+  const handleUnavailable = async (songId) => {
+    if (!songId || handledUnavailable.current.has(songId)) return;
+    handledUnavailable.current.add(songId);
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5000/api/songs/${songId}/validate`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data?.removed) {
+        setSongs((prev) => prev.filter((s) => String(s.id) !== String(songId)));
+        setIndex(0);
+      }
+    } catch (err) {
+      console.error("Song validation failed:", err);
+    }
   };
 
   const handleVote = async (voteType) => {
@@ -211,6 +237,7 @@ function Feed() {
                 isTop={isTop}
                 onLike={() => handleVote("like")}
                 onPass={() => handleVote("dislike")}
+                onUnavailable={() => handleUnavailable(song.id)}
               />
             );
           })}
