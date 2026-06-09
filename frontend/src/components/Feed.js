@@ -65,6 +65,7 @@ function SwipeCard({ song, onLike, onPass, isTop }) {
         albumArt={song.albumArt}
         soundcloudUrl={song.soundcloudUrl}
         previewUrl={song.previewUrl}
+        isActive={isTop}
       />
     </motion.div>
   );
@@ -200,7 +201,7 @@ function Feed() {
           </button>
         </div>
       ) : (
-        <div style={{ position: 'relative', width: 280, height: 380 }}>
+        <div style={{ position: 'relative', width: 280, height: 390 }}>
           {[...remaining].reverse().map((song, i) => {
             const isTop = i === remaining.length - 1;
             return (
@@ -217,9 +218,9 @@ function Feed() {
       )}
 
       {!done && (
-        <div style={{ display: 'flex', gap: 32 }}>
-          <button onClick={() => handleVote("dislike")}>Pass</button>
-          <button onClick={() => handleVote("like")}>Like</button>
+        <div style={{ display: 'flex', gap: 24 }}>
+          <button onClick={() => handleVote("dislike")} style={passBtnStyle}>Pass</button>
+          <button onClick={() => handleVote("like")} style={likeBtnStyle}>Like</button>
         </div>
       )}
 
@@ -227,14 +228,28 @@ function Feed() {
   );
 }
 
-const btnStyle = () => ({
-  background: 'transparent',
-  color: '#333',
-  border: '1px solid #ccc',
+// Match the app's button language: purple primary (solid) + purple outline,
+// same radius/weight as the Navbar and "Add Song" buttons.
+const baseVoteBtn = {
   borderRadius: 8,
-  padding: '8px 24px',
-  fontSize: 14,
+  padding: '10px 30px',
+  fontSize: 15,
+  fontWeight: 600,
   cursor: 'pointer',
-});
+};
+
+const passBtnStyle = {
+  ...baseVoteBtn,
+  background: 'transparent',
+  color: '#e2d9f3',
+  border: '1px solid rgba(168, 85, 247, 0.4)',
+};
+
+const likeBtnStyle = {
+  ...baseVoteBtn,
+  background: '#7c3aed',
+  color: '#fff',
+  border: '1px solid #7c3aed',
+};
 
 export default Feed;
